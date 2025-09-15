@@ -10,6 +10,6 @@
 #
 #   tags = {
 #     Name        = "Terraform Lock Table"
-#     Environment = "lesson-8-9"
+#     Environment = "lesson-db-module"
 #   }
 # }
