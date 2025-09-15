@@ -1,49 +1,99 @@
 terraform {
-  required_version = ">= 1.6.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.100"
+      version = ">= 4.0.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.0.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.0.0"
     }
   }
 }
 
 provider "aws" {
-  region = var.region
+  profile = "default"
+  region  = var.region
 }
 
 module "vpc" {
-  source              = "./modules/vpc"           # Шлях до модуля VPC
-  vpc_cidr_block      = "10.0.0.0/16"             # CIDR блок для VPC
-  public_subnets      = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]        # Публічні підмережі
-  private_subnets     = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]         # Приватні підмережі
-  availability_zones  = ["us-east-2a", "us-east-2b", "us-east-2c"]            # Зони доступності
-  vpc_name           = "${var.name}-vpc"              # Ім'я VPC
+  source             = "./modules/vpc"
+  vpc_cidr_block     = "10.0.0.0/16"
+  public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
+  availability_zones = ["us-west-1a", "us-west-1b", "us-west-1c"]
+  vpc_name           = "lesson-8-9-vpc"
 }
 
 module "ecr" {
-  source               = "./modules/ecr"
-  repository_name      = "${var.name}-django"
-  image_tag_mutability = "MUTABLE"
-  scan_on_push         = true
+  source          = "./modules/ecr"
+  repository_name = var.repository_name
+  scan_on_push    = true
 }
 
 module "eks" {
-  source            = "./modules/eks"
-  cluster_name      = "${var.name}-eks"
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_ids = module.vpc.public_subnet_ids
-  region            = var.region
-  desired_size      = 2
-  min_size          = 2
-  max_size          = 3
-  instance_types    = ["t3.small"]
+  source        = "./modules/eks"
+  cluster_name  = var.cluster_name
+  subnet_ids    = module.vpc.public_subnet_ids
+  instance_type = var.instance_type
+  desired_size  = 1
+  max_size      = 2
+  min_size      = 1
 }
 
-output "ecr_repository_url" {
-  value = module.ecr.repository_url
+data "aws_eks_cluster" "eks" {
+  name       = module.eks.cluster_name
+  depends_on = [module.eks]
 }
 
-output "cluster_name" {
-  value = module.eks.cluster_name
+data "aws_eks_cluster_auth" "eks" {
+  name       = module.eks.cluster_name
+  depends_on = [module.eks]
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.eks.token
+}
+
+provider "helm" {
+  kubernetes = {
+    host                   = data.aws_eks_cluster.eks.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+  }
+}
+
+module "jenkins" {
+  source            = "./modules/jenkins"
+  kubeconfig        = data.aws_eks_cluster.eks.endpoint
+  cluster_name      = module.eks.cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  github_username   = var.github_username
+  github_token      = var.github_token
+  github_repo_url   = var.github_repo_url
+
+  depends_on = [module.eks]
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+}
+
+module "argo_cd" {
+  source          = "./modules/argo_cd"
+  namespace       = "argocd"
+  chart_version   = "5.46.4"
+  github_username = var.github_username
+  github_token    = var.github_token
+  github_repo_url = var.github_repo_url
+
+  depends_on = [module.eks]
 }
