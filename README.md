@@ -2,12 +2,16 @@
 
 ## Опис проєкту
 Цей проєкт реалізує повний CI/CD-конвеєр із використанням **Terraform, Helm, Jenkins, Argo CD та Amazon ECR** для автоматизації розгортання Django-застосунку в Kubernetes-кластері.
+Також у проєкт інтегрована **база даних (Amazon RDS/Aurora PostgreSQL)**.
 
 ### Основні можливості
 - **Terraform** — створення інфраструктури (VPC, EKS, S3, DynamoDB, ECR).
 - **Helm** — встановлення Jenkins та Argo CD, а також деплой Django-застосунку.
 - **Jenkins** — CI-процес (збірка Docker-образу, пуш у ECR, оновлення Helm chart).
 - **Argo CD** — CD-процес (GitOps, автоматичне розгортання застосунку після оновлення Git).
+- **Amazon RDS** — підтримка двох режимів:
+  - Стандартний інстанс PostgreSQL.
+  - Aurora PostgreSQL кластер із репліками для підвищення доступності.
 
 ---
 
@@ -44,6 +48,13 @@ terraform init      # Ініціалізація Terraform та бекенду
 terraform plan      # Перевірка плану змін
 terraform apply     # Створення інфраструктури
 ```
+
+> Для перемикання між стандартним RDS та Aurora використовуйте змінну `use_aurora`.
+```hcl
+use_aurora = false  # стандартний PostgreSQL інстанс
+use_aurora = true   # Aurora PostgreSQL кластер
+```
+
 ### 2. Доступ до Jenkins
 * Знайдіть URL та пароль адміністратора у terraform outputs.
 * Залогіньтесь у Jenkins UI.
@@ -60,6 +71,11 @@ terraform apply     # Створення інфраструктури
 * Авторизуйтесь (пароль також у terraform outputs).
 * Знайдіть Application django-app.
 * Переконайтесь, що застосунок автоматично синхронізувався з оновленим Helm-чартом.
+### 5. Використання RDS
+* Вихідний параметр `rds_endpoint` доступний після `terraform apply`:
+```sh
+terraform output rds_endpoint
+```
 
 ## Корисні команди
 
@@ -79,6 +95,11 @@ terraform destroy   # Видалення всіх ресурсів
 ```sh
 kubectl get pods -n argocd
 kubectl get applications -n argocd
+```
+
+### RDS
+```sh
+terraform output rds_endpoint  # Отримати endpoint БД
 ```
 
 ## Схема CI/CD
