@@ -5,8 +5,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.vpc_name}-vpc"
-    Environment = "lesson-db-module"
+    Name = var.vpc_name
   }
 }
 
@@ -19,7 +18,7 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = "${var.vpc_name}-public-subnet-${count.index + 1}"
-    Environment = "lesson-db-module"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
@@ -31,7 +30,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "${var.vpc_name}-private-subnet-${count.index + 1}"
-    Environment = "lesson-db-module"
+    "kubernetes.io/cluster/dev" = "shared"
   }
 }
 
@@ -40,6 +39,5 @@ resource "aws_internet_gateway" "igw" {
 
   tags = {
     Name = "${var.vpc_name}-igw"
-    Environment = "lesson-db-module"
   }
 }

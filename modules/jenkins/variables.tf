@@ -1,11 +1,12 @@
-variable "kubeconfig" {
-  description = "Path to kubeconfig file"
-  type        = string
-}
-
 variable "cluster_name" {
   description = "Kubernetes cluster name"
   type        = string
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace for deploying Jenkins"
+  type        = string
+  default     = "jenkins"
 }
 
 variable "oidc_provider_arn" {
@@ -18,21 +19,23 @@ variable "oidc_provider_url" {
   type        = string
 }
 
-variable "github_username" {
-  description = "GitHub username"
+variable "github_pat" {
+  description = "GitHub Personal Access Token"
   type        = string
-  default     = ""
   sensitive   = true
 }
 
-variable "github_token" {
-  description = "GitHub Personal Access Token"
+variable "github_user" {
+  description = "GitHub username"
   type        = string
-  default     = ""
-  sensitive   = true
 }
 
 variable "github_repo_url" {
   description = "GitHub repository URL"
+  type        = string
+}
+
+variable "github_branch" {
+  description = "GitHub branch for Jenkins"
   type        = string
 }

@@ -5,21 +5,7 @@ image:
 
 service:
   type: LoadBalancer
-  port: 8000
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 6
-  targetCPUUtilization: 70
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
+  port: 80
 
 ingress:
   enabled: false
@@ -29,8 +15,7 @@ config:
   POSTGRES_HOST: postgres
   POSTGRES_USER: django_user
   POSTGRES_DB: django_db
-  POSTGRES_PASSWORD: pass9764gd
-  ALLOWED_HOSTS: localhost,.us-west-2.elb.amazonaws.com
+  POSTGRES_PASSWORD: pass12345
 
 postgresql:
   enabled: true

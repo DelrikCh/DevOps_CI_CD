@@ -26,7 +26,8 @@ module "vpc" {
   public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
   availability_zones = ["us-west-1a", "us-west-1b", "us-west-1c"]
-  vpc_name           = "lesson-db-module-vpc"
+  vpc_name           = "${var.name}-vpc"
+  name               = var.name
 }
 
 module "ecr" {
@@ -36,13 +37,17 @@ module "ecr" {
 }
 
 module "eks" {
-  source        = "./modules/eks"
-  cluster_name  = var.cluster_name
-  subnet_ids    = module.vpc.public_subnets
-  instance_type = var.instance_type
-  desired_size  = 1
-  max_size      = 2
-  min_size      = 1
+  source          = "./modules/eks"
+  cluster_name    = "${var.name}-eks"
+  subnet_ids      = module.vpc.public_subnets
+  node_subnet_ids = module.vpc.private_subnets
+  instance_type   = var.instance_type
+  desired_size    = 2
+  max_size        = 4
+  min_size        = 2
+  depends_on      = [
+    module.vpc.nat_instance_id
+  ]
 }
 
 data "aws_eks_cluster" "eks" {
@@ -71,18 +76,16 @@ provider "helm" {
 
 module "jenkins" {
   source            = "./modules/jenkins"
-  kubeconfig        = data.aws_eks_cluster.eks.endpoint
-  cluster_name      = module.eks.cluster_name
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
-  github_username   = var.github_username
-  github_token      = var.github_token
+  github_user       = var.github_user
+  github_pat        = var.github_pat
+  github_branch     = var.github_branch
   github_repo_url   = var.github_repo_url
 
-  depends_on = [module.eks]
+  depends_on        = [module.eks]
 
-  providers = {
-    helm       = helm
+  providers         = {
     kubernetes = kubernetes
   }
 }
@@ -91,15 +94,12 @@ module "argo_cd" {
   source          = "./modules/argo_cd"
   namespace       = "argocd"
   chart_version   = "8.1.3"
-  rds_db_name   = var.rds_database_name
-  rds_username  = var.rds_username
-  rds_password  = var.rds_password
-  rds_endpoint  = module.rds.rds_endpoint
-  github_username = var.github_username
-  github_token    = var.github_token
-  github_repo_url = var.github_repo_url
+  rds_db_name     = var.rds_database_name
+  rds_username    = var.rds_username
+  rds_password    = var.rds_password
+  rds_endpoint    = module.rds.rds_endpoint
 
-  depends_on = [module.eks]
+  depends_on      = [module.eks]
 }
 
 module "rds" {
@@ -143,5 +143,12 @@ module "rds" {
   }
   depends_on = [
     module.vpc
+  ]
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+  depends_on = [
+    module.eks
   ]
 }

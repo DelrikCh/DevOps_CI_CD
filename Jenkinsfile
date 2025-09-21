@@ -17,6 +17,10 @@ spec:
         - sleep
       args:
         - 99d
+    - name: git
+      image: alpine/git
+      command: ["cat"]
+      tty: true
 """
     }
   }
@@ -35,6 +39,7 @@ spec:
       steps {
         container('kaniko') {
           sh '''
+            cd django
             /kaniko/executor \\
               --context `pwd` \\
               --dockerfile `pwd`/Dockerfile \\
@@ -50,13 +55,13 @@ spec:
     stage('Update Chart Tag in Git') {
       steps {
         container('git') {
-          withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: ${github_username}, passwordVariable: ${github_token})]) {
+          withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             sh '''
-              git clone https://${github_username}:${github_token}@github.com/${github_username}/DevOps_CI_CD.git
+              git clone https://$USERNAME:$PASSWORD@github.com/orm81zp/devops-cicd.git
               set -x
-              cd my-microservice-projec
-              git checkout -b lesson-db-module
-              cd DevOps_CI_CD/charts/django-app
+              cd devops
+              git checkout final-project
+              cd charts/django-app
 
               sed -i "s/tag: .*/tag: $IMAGE_TAG/" values.yaml
 
@@ -65,7 +70,7 @@ spec:
 
               git add values.yaml
               git commit -m "Update image tag to $IMAGE_TAG"
-              git push origin lesson-db-module
+              git push origin final-project
             '''
           }
         }

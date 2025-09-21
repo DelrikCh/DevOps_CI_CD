@@ -3,9 +3,9 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
-output "vpc_arn" {
-  description = "VPC ARN"
-  value       = aws_vpc.main.arn
+output "nat_instance_id" {
+  description = "ID of the NAT EC2 instance"
+  value       = aws_instance.nat_instance.id
 }
 
 output "vpc_cidr_block" {

@@ -7,6 +7,10 @@ resource "aws_ecr_repository" "ecr" {
     scan_on_push = var.scan_on_push
   }
 
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
   tags = {
     Name        = var.repository_name
   }

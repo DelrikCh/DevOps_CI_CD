@@ -18,29 +18,24 @@ output "ecr_repository_url" {
   value       = module.ecr.repository_url
 }
 
-output "eks_cluster_id" {
-  description = "EKS cluster ID"
-  value       = module.eks.cluster_id
-}
-
-output "eks_cluster_arn" {
-  description = "EKS cluster ARN"
-  value       = module.eks.cluster_arn
+output "ecr_repository_arn" {
+  description = "Repository ARN"
+  value       = module.ecr.repository_arn
 }
 
 output "eks_cluster_endpoint" {
   description = "EKS cluster endpoint"
-  value       = module.eks.cluster_endpoint
+  value       = module.eks.eks_cluster_endpoint
 }
 
 output "eks_cluster_name" {
   description = "Name of the EKS cluster"
-  value       = module.eks.cluster_name
+  value       = module.eks.eks_cluster_name
 }
 
 output "eks_node_role_arn" {
   description = "IAM role ARN for EKS Worker Nodes"
-  value       = module.eks.node_role_arn
+  value       = module.eks.eks_node_role_arn
 }
 
 output "oidc_provider_arn" {
@@ -59,6 +54,11 @@ output "jenkins_namespace" {
   value = module.jenkins.jenkins_namespace
 }
 
+output "github_user" {
+  description = "GitHub user"
+  value       = var.github_user
+}
+
 output "argocd_namespace" {
   description = "ArgoCD namespace"
   value       = module.argo_cd.namespace
@@ -72,4 +72,14 @@ output "argocd_server_service" {
 output "argocd_admin_password" {
   description = "Initial admin password"
   value       = module.argo_cd.admin_password
+}
+
+output "internet_gateway_id" {
+  description = "ID Internet Gateway"
+  value       = module.vpc.internet_gateway_id
+}
+
+output "rds_endpoint" {
+  description = "RDS endpoint for connecting to the database"
+  value       = module.rds.rds_endpoint
 }

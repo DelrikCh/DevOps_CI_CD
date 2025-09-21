@@ -1,3 +1,9 @@
+variable "bucket_name" {
+  description = "The name of the S3 bucket for Terraform state"
+  type        = string
+  default     = "clp-tfstate-938042774571-dev"
+}
+
 variable "region" {
   description = "AWS region for deployment"
   type        = string
@@ -10,17 +16,20 @@ variable "name" {
   default     = "django-app"
 }
 
-
-variable "github_username" {
-  description = "GitHub username"
+variable "table_name" {
+  description = "The name of the DynamoDB table for Terraform locks"
   type        = string
-  sensitive   = true
+  default     = "terraform-locks"
 }
 
-variable "github_token" {
+variable "github_pat" {
   description = "GitHub Personal Access Token"
   type        = string
-  sensitive   = true
+}
+
+variable "github_user" {
+  description = "GitHub username"
+  type        = string
 }
 
 variable "github_repo_url" {
@@ -28,22 +37,21 @@ variable "github_repo_url" {
   type        = string
 }
 
+variable "github_branch" {
+  description = "GitHub branch for Jenkins"
+  type        = string
+}
+
 variable "instance_type" {
   description = "EC2 instance type for the worker nodes"
   type        = string
-  default     = "t2.small"
+  default     = "t2.medium"
 }
 
 variable "repository_name" {
   description = "Name of the ECR repository"
   type        = string
   default     = "my-django-app"
-}
-
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
-  type        = string
-  default     = "lesson-8-9-eks"
 }
 
 variable "rds_use_aurora" {
